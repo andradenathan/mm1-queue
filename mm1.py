@@ -1,30 +1,67 @@
-from heapq import heapify, heappop, heappush
-from numpy import random
+import numpy as np
+from typing import List
+from eventqueue import EventQueue
 
-LAMBDAS = [0.5, 0.8, 0.9, 0.99]
-SIMULATIONS_SIZE = {"N": 100, "T": 10.000}
+TIME = 0
+SIMULATIONS_SIZE = {"N": 100, "T": 10000}
 
-def create_customers(lambd):
-    interarrival_time = random.exponential(lambd)
-    service_time = random.exponential(1.0)
-    return (interarrival_time, service_time)
+def generate_interarrival_time(lambd):
+    return np.random.exponential(1/lambd)
 
-def create_queues():
-    raise NotImplementedError("Queue creation not implemented yet")
-    
+def generate_service_time():
+    return np.random.exponential(1.0)
 
-def simulation():
-    # 1. Create priority queue
-    # 2. Such a queue stores the times of all pending events, such as the next time a customer will arive
-    # 3. The event with the smallest time is at the front of the queue
-    raise NotImplementedError("Simulation not implemented yet")
-    
+def is_queue_empty(customer):
+    return customer == 0
 
 if __name__ == "__main__":
-    queues = []
-    for lambd in LAMBDAS:
-        customer = create_customers(lambd)
+    for lambd in EventQueue.LAMBDAS:
+        mean_queues = []
+        for _ in range(SIMULATIONS_SIZE["N"]):
+            queue: List[EventQueue] = []
+            mean = 0
+            total_customers = 0    
+            TIME = 0
+            last_event_time = 0
 
-        heappush(queues, customer)
+            queue.append(
+                EventQueue(
+                    EventQueue.ARRIVAL, 
+                    generate_interarrival_time(lambd)))
+            
+            queue.append(
+                EventQueue(
+                    EventQueue.DEPARTURE, 
+                    generate_service_time()))
+            
+            while TIME <= SIMULATIONS_SIZE["T"]:
+                event = queue.pop(0)
+                TIME = event.time
+                mean += total_customers * (TIME - last_event_time)
+                last_event_time = TIME
 
-    print(queues)
+                if event.type == EventQueue.ARRIVAL:
+                    total_customers += 1
+
+                    queue.append(
+                        EventQueue(
+                            EventQueue.ARRIVAL, 
+                            event.time + generate_interarrival_time(lambd)))
+                else:
+                    total_customers -= 1
+
+                    if is_queue_empty(total_customers):
+                        queue.append(
+                            EventQueue(
+                                EventQueue.DEPARTURE, 
+                                queue[0].time + generate_service_time()))
+                    else:
+                        queue.append(
+                            EventQueue(
+                                EventQueue.DEPARTURE,
+                                event.time + generate_service_time()))
+
+                queue.sort(key = lambda event: event.time)
+                
+            mean_queues.append(mean/TIME * 1/lambd)
+        print(round(np.mean(mean_queues), 2), round(1/(1-lambd), 2))
