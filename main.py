@@ -1,7 +1,7 @@
 import pprint
 import numpy as np
 from typing import List
-from eventqueue import Event
+from event import Event
 
 LAMBDAS = [0.5, 0.8, 0.9, 0.99]
 QUEUE_QUANTITY = 100
