@@ -28,9 +28,7 @@ def run(is_service_time_const):
             last_event_time = 0
             
             # inicializa a fila com dois eventos (um de chegada, outro de saída) 
-            events.append(
-                Event(
-                    Event.ARRIVAL, 0))
+            events.append(Event(Event.ARRIVAL, 0))
             
             events.append(
                 Event(
